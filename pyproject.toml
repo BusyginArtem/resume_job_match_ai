@@ -1,0 +1,27 @@
+[project]
+name = "resume_job_match_ai"
+version = "0.1.0"
+description = "resume_job_match_ai using crewAI"
+authors = [{ name = "Your Name", email = "you@example.com" }]
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "crewai-tools>=0.71.0",
+    "crewai[tools]>=0.165.1,<1.0.0",
+    "markdown>=3.9",
+    "pdfkit>=1.0.0",
+    "weasyprint>=66.0",
+]
+
+[project.scripts]
+resume_job_match_ai = "resume_job_match_ai.main:run"
+run_crew = "resume_job_match_ai.main:run"
+train = "resume_job_match_ai.main:train"
+replay = "resume_job_match_ai.main:replay"
+test = "resume_job_match_ai.main:test"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.crewai]
+type = "crew"
