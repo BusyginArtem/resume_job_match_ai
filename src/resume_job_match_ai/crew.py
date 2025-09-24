@@ -1,15 +1,21 @@
+import os
 from typing import List
 
 from crewai import Agent, Crew, Process, Task, TaskOutput
 from crewai.agents.agent_builder.base_agent import BaseAgent
 from crewai.project import CrewBase, agent, crew, task
 
-from resume_job_match_ai.tools import (
-    SerperDevTool,
-    extract_job_description,
-    extract_resume,
-    save_resume_as_pdf,
-)
+# from resume_job_match_ai.tools import (
+#     SerperDevTool,
+#     extract_job_description,
+#     extract_resume,
+#     save_resume_as_pdf,
+# )
+# Import tools directly
+from crewai_tools import SerperDevTool
+
+from .tools.file_tools import extract_job_description
+from .tools.pdf_tools import extract_resume, save_resume_as_pdf
 
 
 @CrewBase
@@ -20,6 +26,14 @@ class ResumeJobMatchAi:
     tasks: List[Task]
     tasks_config: dict  # Add this line to define tasks_config
     agents_config: dict  # Add this line to define agents_config
+
+    def __init__(self):
+        # Ensure output directory exists
+        if not os.path.exists("./output"):
+            os.makedirs("./output")
+
+        # Initialize tools as instance variables for better control
+        self.serper_tool = SerperDevTool()
 
     @agent
     def resume_analyst(self) -> Agent:
@@ -38,8 +52,10 @@ class ResumeJobMatchAi:
             config=self.agents_config["resume_analyst"],  # type: ignore[index]
             verbose=True,
             tools=[extract_resume],
-            max_rpm=10,  # Requests per minute
-            # max_execution_time=300,  # 5 minutes timeout
+            max_rpm=1,  # Reduced rate limit
+            max_execution_time=180,  # 3 minutes
+            allow_delegation=False,  # Prevent delegation issues
+            step_callback=self._log_agent_step,
         )
 
     @agent
@@ -59,8 +75,10 @@ class ResumeJobMatchAi:
             config=self.agents_config["matchmaker"],  # type: ignore[index]
             verbose=True,
             tools=[extract_job_description],
-            max_rpm=10,  # Requests per minute
-            # max_execution_time=300,  # 5 minutes timeout
+            max_rpm=1,
+            max_execution_time=180,
+            allow_delegation=False,
+            step_callback=self._log_agent_step,
         )
 
     @agent
@@ -78,9 +96,11 @@ class ResumeJobMatchAi:
         return Agent(
             config=self.agents_config["web_researcher"],  # type: ignore[index]
             verbose=True,
-            tools=[SerperDevTool()],
-            max_rpm=10,  # Requests per minute
-            # max_execution_time=300,  # 5 minutes timeout
+            tools=[self.serper_tool],
+            max_rpm=1,
+            max_execution_time=600,
+            allow_delegation=False,
+            step_callback=self._log_agent_step,
         )
 
     @agent
@@ -99,8 +119,10 @@ class ResumeJobMatchAi:
             verbose=True,
             tools=[save_resume_as_pdf],
             max_retry_limit=3,
-            max_rpm=10,  # Requests per minute
-            # max_execution_time=300,  # 5 minutes timeout
+            max_rpm=1,
+            max_execution_time=300,  # 5 minutes for PDF generation
+            allow_delegation=False,
+            step_callback=self._log_agent_step,
         )
 
     @task
@@ -148,15 +170,6 @@ class ResumeJobMatchAi:
             tools=[SerperDevTool()],
         )
 
-    def callback_function(self, output: TaskOutput):
-        # Do something after the task is completed
-        # Example: Send an email to the manager
-        print(f"""
-            Task completed!
-            Task: {output.description}
-            Agent: {output.agent}
-        """)
-
     @task
     def resume_writer_task(self) -> Task:
         """
@@ -165,12 +178,14 @@ class ResumeJobMatchAi:
         Returns:
             Task: An instance of the Task class initialized with the configuration
                 specified in 'self.tasks_config["resume_writer_task"]' and the output
-                file set to 'output/resume_advising_report.md'.
+                file set to 'output/resume_advising_report.md'. The task uses the
+                'save_resume_as_pdf' tool and includes a callback function to be executed
+                after the task is completed.
         """
         return Task(
             config=self.tasks_config["resume_writer_task"],  # type: ignore[index]
             # output_file="output/resume_advising_report.md",
-            callback=self.callback_function,
+            callback=self.confirm_resume_writer_completed,
             tools=[save_resume_as_pdf],
         )
 
@@ -184,4 +199,37 @@ class ResumeJobMatchAi:
             process=Process.sequential,
             verbose=True,
             # process=Process.hierarchical, # In case you wanna use that instead https://docs.crewai.com/how-to/Hierarchical/
+            # Add memory and planning for better coordination
+            memory=True,
+            planning=True,
+            step_callback=self._crew_step_callback,
         )
+
+    def _crew_step_callback(self, step):
+        """Debug callback for crew-level steps"""
+        print(f"🚀 CREW STEP: {step[:200]}")
+
+    def confirm_resume_writer_completed(self, output: TaskOutput):
+        """Callback function to be executed after the resume_writer_task is completed."""
+        print(f"""
+            Task completed!
+            Task: {output.description}
+            Agent: {output.agent}
+        """)
+
+        pdf_path = "./output/enhanced_resume.pdf"
+        if os.path.exists(pdf_path):
+            file_size = os.path.getsize(pdf_path)
+            print(f"✅ PDF file confirmed: {pdf_path} ({file_size} bytes)")
+        else:
+            print(f"⚠️ PDF file not found at: {pdf_path}")
+
+    def _log_agent_step(self, step):
+        """Debug callback to log agent steps"""
+        name = type(step).__name__
+        print(f"🔍 DEBUG - Step name: {name}")
+
+        if hasattr(step, "tool_name"):
+            print(f"Tool called: {step.tool_name}")
+        if hasattr(step, "output"):
+            print("Output:", step.output)
