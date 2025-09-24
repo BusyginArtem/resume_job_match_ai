@@ -1,132 +1,102 @@
 resume_analysis_task:
   description: >
-    Analyze the uploaded resume to extract key details such as full name, contact information, work experience, education, technical and soft skills, certifications, and other relevant highlights.
-  expected_output: >
-    A structured summary (as a list or key-value pairs) of the extracted information from the resume.
+    Analyze the uploaded resume {resume} to extract key details such as:
+    - Candidate's full name
+    - Contact information (email, phone, LinkedIn, etc.)
+    - Professional summary or objective
+    - Work experience with job titles, companies, dates, and descriptions
+    - Education history with degrees, institutions, and graduation dates
+    - Relevant skills, frameworks, and tools
+    - Notable projects, publications, or presentations
+    - Accomplishments, awards, or certifications
+    - Technical and soft skills
+    - Any additional relevant sections (volunteer work, languages, interests, etc.)
+    Summarize the extracted information in a structured format (e.g., bullet points or key-value pairs).
     Ensure all key sections are represented with relevant data.
+
+    IMPORTANT: Use the extract_resume tool with the {resume} parameter to parse the PDF content.
+    EXAMPLE: extract_resume("{resume}")
+  expected_output: >
+    1. A structured summary (as a list or key-value pairs) of the extracted information from the {resume}.
+    2. Ensure all key sections are represented with relevant data.
+    3. Successful extraction using the extract_resume tool.
+    4. Confirmation message that the {resume} was parsed successfully.
+
+    Provide the output in a clear, structured format and include all relevant details.
   agent: resume_analyst
-  # tools:
-  #   - extract_resume
   output_file: output/analyst_report.md
   markdown: true
 
 job_matching_task:
   description: >
-    Using the candidate’s resume and the job description, calculate a match score (0–100).
-    Base it on how well the candidate’s skills, experience, and background
+    Using the output from resume_analysis_task and the job description {jd} that is extracted using the extract_job_description tool,
+    calculate a match score (0–100). Base it on how well the candidate's skills, experience, and background
     align with the job requirements. Include a brief explanation for each score.
+
+    IMPORTANT: Use the extract_job_description tool to get the job description content.
+    EXAMPLE: extract_job_description({jd})
   expected_output: >
-    - Match score
+    - Match score (0-100)
     - Summary of matched and missing criteria
     - Short rationale for the score
-    - Job match expectations
+    - Job match expectations and recommendations
+
+    IMPORTANT: Provide the output in a clear, structured format and include all relevant details.
   agent: matchmaker
-  # tools:
-  #   - extract_job_description
   output_file: output/job_matching_report.md
   markdown: true
-  context:
-    - resume_analysis_task
+  context: [resume_analysis_task]
 
 web_research_task:
   description: >
     Perform internet research to gather up-to-date information about:
       - Current resume formatting standards and ATS optimization best practices.
-      - In-demand skills, frameworks, and tools for the candidate’s target roles and industries.
+      - In-demand skills, frameworks, and tools for the candidate's target roles and industries.
       - Role-specific keywords and phrasing used in recent job postings.
-    Summarize findings so they can be applied in the resume advising process.
+
+    Summarize findings so they can be applied in the {resume} advising process.
   expected_output: >
     A concise research summary including:
       - Top 5–10 industry-relevant skills/technologies.
       - Recent formatting and ATS trends.
       - Common role descriptions and keywords from job postings.
-    Output should be structured and easy to reference in downstream tasks.
+      
+    IMPORTANT: Provide the output in a clear, structured format and include
+    3–5 actionable recommendations for improving the resume based on research.
   agent: web_researcher
-  # tools:
-  #   - SerperDevTool
-  output_file: output/serper_research_summary.md
+  output_file: output/web_research_summary.md
   markdown: true
 
 resume_writer_task:
   description: >
-    Synthesize insights from prior tasks (resume analysis, job matching, and web research) 
-    to create a polished Markdown version of the candidate’s improved resume. 
-    Ensure the Markdown document reflects modern formatting, ATS optimization, 
-    and alignment with job market expectations. 
-    The document should integrate:
-      - Extracted candidate details (work history, skills, certifications, education).
-      - Job match findings (keywords, missing skills, relevance).
-      - Internet research (ATS trends, in-demand skills, role-specific phrasing).
-
-    The final output should be a well-structured, professional resume in Markdown format.
+    Create an improved resume based on outputs from previous tasks, then convert it to PDF.
+    
+    Steps to follow:
+    1. Review outputs from resume_analysis_task, job_matching_task, and web_research_task
+    2. Create a comprehensive markdown-formatted resume that incorporates:
+      - All candidate information from the resume analysis
+      - Improvements suggested by the job matching analysis
+      - Modern trends and keywords from web research
+    3. Format the resume with proper markdown syntax (# for main heading, ## for sections, etc.)
+    4. After creating the complete markdown resume, use the save_resume_as_pdf tool
+    5. Call: save_resume_as_pdf(your_complete_markdown_content)
+    
+    CRITICAL: When calling save_resume_as_pdf, pass the markdown content directly as a string parameter.
+    Example: save_resume_as_pdf("# John Doe\n## Software Engineer\n\n### Experience\n...")
+    
+    Do NOT pass objects, dictionaries, or complex data structures to the tool.
   expected_output: >
-    A complete, professional resume written in valid Markdown. 
-    The output should:
-      1. Contain all key sections (summary, work experience, education, skills, certifications, extras).
-      2. Follow modern resume best practices and ATS standards.
-      3. Incorporate 3–5 improvements based on job match gaps and industry research.
-      4. Be well-formatted, clear, and easy to read. 
-
-    The generated markdown should be used as the parameter 'markdown_content' for the save_resume_as_pdf tool.
+    1. A complete professional resume in markdown format that includes:
+      - Header with name and contact information
+      - Professional summary section
+      - Work experience with quantified achievements
+      - Education section
+      - Skills section organized by category
+      - Any additional relevant sections (certifications, projects, etc.)
+      - Modern formatting that is ATS-friendly
+    
+    2. Successful conversion to PDF using the save_resume_as_pdf tool
+    3. Confirmation message that the PDF was created successfully
   agent: resume_writer
-  # tools:
-  #   - save_resume_as_pdf
-  # output_file: output/resume_advising_report.md
   markdown: true
-  context: 
-    - job_matching_task
-    - resume_analysis_task
-    - web_research_task
-
-# ---------------------------------------------------------------------------
-
-# resume_writer_task:
-#   description: >
-#     Review the candidate’s resume, job match scores, and role expectations. 
-#     Use internet research to identify current industry trends, 
-#     in-demand skills, and formatting standards relevant to the candidate’s target roles.
-#     Provide clear, actionable suggestions to improve the resume in terms of content, 
-#     formatting, and alignment with the desired positions. 
-#     Focus on missing skills, unclear role descriptions, lack of quantified achievements, 
-#     outdated structures, and ATS optimization.
-#   expected_output: >
-#     A prioritized list of improvement suggestions for the resume, grouped by:
-#       1. Content (skills, role descriptions, quantified impact).
-#       2. Formatting (clarity, ATS-friendliness, modern standards).
-#       3. Alignment (keywords, industry trends, tailoring to job roles).
-#     Include 3–5 high-impact recommendations and tips for tailoring the resume 
-#     to increase recruiter appeal and market fit.
-#   agent: advisor
-#   tools:
-#     - save_resume_as_pdf
-#   output_file: output/resume_advising_report.md
-#   context: 
-#     - job_matching_task
-#     - resume_analysis_task
-#     - web_research_task
-
-    
-# resume_advising_task:
-#   description: >
-#     Review the candidate’s resume, job match scores, and role expectations. 
-#     Use internet research to identify current industry trends, 
-#     in-demand skills, and formatting standards relevant to the candidate’s target roles.
-#     Provide clear, actionable suggestions to improve the resume in terms of content, 
-#     formatting, and alignment with the desired positions. 
-#     Focus on missing skills, unclear role descriptions, lack of quantified achievements, 
-#     outdated structures, and ATS optimization.
-#   expected_output: >
-#     A prioritized list of improvement suggestions for the resume, grouped by:
-#       1. Content (skills, role descriptions, quantified impact).
-#       2. Formatting (clarity, ATS-friendliness, modern standards).
-#       3. Alignment (keywords, industry trends, tailoring to job roles).
-#     Include 3–5 high-impact recommendations and tips for tailoring the resume 
-#     to increase recruiter appeal and market fit.
-#   agent: advisor
-#   output_file: output/resume_advising_report.md
-#   context: 
-#     - job_matching_task
-#     - resume_analysis_task
-#     # - web_research_task
-    
-
+  context: [job_matching_task, web_research_task, resume_analysis_task]

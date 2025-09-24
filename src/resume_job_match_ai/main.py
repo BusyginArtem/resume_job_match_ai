@@ -45,12 +45,19 @@ def run():
         except OSError as e:
             print("Failed to delete %s. Reason: %s" % (file_path, e))
 
+    resume_path = "./input/cv.pdf"
+    jd_path = "./input/jd.txt"
+
+    if not os.path.exists(resume_path) or not os.path.isfile(jd_path):
+        raise FileNotFoundError("The files are not provided.")
+
     inputs = {
-        "resume": "./input/Artem Busyhin CV_CH.pdf",
-        "jd": "./input/jd.txt",
+        "resume": resume_path,
+        "jd": jd_path,
     }
 
     try:
+        print("Starting the crew...", inputs)
         ResumeJobMatchAi().crew().kickoff(inputs=inputs)
     except Exception as e:
         print("Error while running the crew:", e)

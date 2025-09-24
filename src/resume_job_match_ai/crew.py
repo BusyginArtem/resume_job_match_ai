@@ -39,7 +39,7 @@ class ResumeJobMatchAi:
             verbose=True,
             tools=[extract_resume],
             max_rpm=10,  # Requests per minute
-            max_execution_time=300,  # 5 minutes timeout
+            # max_execution_time=300,  # 5 minutes timeout
         )
 
     @agent
@@ -60,7 +60,7 @@ class ResumeJobMatchAi:
             verbose=True,
             tools=[extract_job_description],
             max_rpm=10,  # Requests per minute
-            max_execution_time=300,  # 5 minutes timeout
+            # max_execution_time=300,  # 5 minutes timeout
         )
 
     @agent
@@ -80,7 +80,7 @@ class ResumeJobMatchAi:
             verbose=True,
             tools=[SerperDevTool()],
             max_rpm=10,  # Requests per minute
-            max_execution_time=300,  # 5 minutes timeout
+            # max_execution_time=300,  # 5 minutes timeout
         )
 
     @agent
@@ -98,9 +98,9 @@ class ResumeJobMatchAi:
             config=self.agents_config["resume_writer"],  # type: ignore[index]
             verbose=True,
             tools=[save_resume_as_pdf],
-            max_rpm=1,  # Requests per minute
             max_retry_limit=3,
-            max_execution_time=300,  # 5 minutes timeout
+            max_rpm=10,  # Requests per minute
+            # max_execution_time=300,  # 5 minutes timeout
         )
 
     @task
@@ -114,7 +114,8 @@ class ResumeJobMatchAi:
         """
         return Task(
             config=self.tasks_config["resume_analysis_task"],  # type: ignore[index]
-            output_file="output/analyst_report.md",
+            # output_file="output/analyst_report.md",
+            tools=[extract_resume],
         )
 
     @task
@@ -128,7 +129,8 @@ class ResumeJobMatchAi:
         """
         return Task(
             config=self.tasks_config["job_matching_task"],  # type: ignore[index]
-            output_file="output/job_matching_report.md",
+            # output_file="output/job_matching_report.md",
+            tools=[extract_job_description],
         )
 
     @task
@@ -142,7 +144,8 @@ class ResumeJobMatchAi:
         """
         return Task(
             config=self.tasks_config["web_research_task"],  # type: ignore[index]
-            output_file="output/web_research_summary.md",
+            # output_file="output/web_research_summary.md",
+            tools=[SerperDevTool()],
         )
 
     def callback_function(self, output: TaskOutput):
@@ -151,6 +154,7 @@ class ResumeJobMatchAi:
         print(f"""
             Task completed!
             Task: {output.description}
+            Agent: {output.agent}
         """)
 
     @task
@@ -167,6 +171,7 @@ class ResumeJobMatchAi:
             config=self.tasks_config["resume_writer_task"],  # type: ignore[index]
             # output_file="output/resume_advising_report.md",
             callback=self.callback_function,
+            tools=[save_resume_as_pdf],
         )
 
     @crew

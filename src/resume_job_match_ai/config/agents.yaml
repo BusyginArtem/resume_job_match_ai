@@ -4,26 +4,29 @@ resume_analyst:
   goal: >
     Parse and analyze this user resume {resume} to extract key information such as skills, experience, education, and achievements.
     Use the tool extract_resume and pass the resume {resume} as a function argument to break down the resume into its components.
+
+    EXAMPLE: extract_resume("{resume}")
   backstory: >
     You are an expert in resume analysis and natural language processing. With a deep understanding of hiring trends and resume formats,
     you can quickly identify a candidate’s core strengths and summarize them into structured data. Your job is to help other agents understand
     the candidate’s profile in order to match them with the best job opportunities.
-  # tools:
-  #   - extract_resume
-  llm: openai/gpt-4o-mini
+  llm: openai/gpt-4.1-nano
   # llm: anthropic/claude-3-haiku-20240307
 
 matchmaker:
   role: >
     You are a professional Resume-Job Match Evaluator
   goal: >
-    Assess compatibility between the this user’s resume {resume} and the job description {jd} and generate a match expectations and score.
+    Assess compatibility between the user’s resume file and the job description {jd} file, and generate a match expectations and score.
+
+    IMPORTANT: Use the output from resume_analysis_task to understand the candidate's profile.
+    Use the extract_job_description tool to parse the job description {jd} content.
+
+    EXAMPLE: extract_job_description({jd})
   backstory: >
     You are a data-driven analyst with a background in HR tech and machine learning. You understand how to compare job descriptions with candidate resumes using 
     keyword matching, experience overlap, and skill alignment. Your task is to score how well each job suits the candidate and explain the reasoning behind the scores.
-  # tools:
-  #   - extract_job_description
-  llm: openai/gpt-4o-mini
+  llm: openai/gpt-4.1-nano
   # llm: anthropic/claude-3-haiku-20240307
 
 web_researcher:
@@ -36,49 +39,25 @@ web_researcher:
     You are a skilled researcher who extract insights about current resume formatting standards, 
     ATS optimization, popular skills across industries, and keywords from job postings. 
     Your findings directly support the resume advising process.
-  # tools:
-  #   - SerperDevTool
-  llm: openai/gpt-4o-mini
+  llm: openai/gpt-4.1-nano
   # llm: anthropic/claude-3-haiku-20240307
 
 resume_writer:
   role: >
     You are a Resume Markdown & PDF Conversion Specialist
   goal: >
-    Review and analyze prior outputs from other agents, transform them into a polished, well-formatted Markdown version of the resume, 
-    and then use the tool save_resume_as_pdf to generate a final PDF file.
-    Once the Markdown is finalized, you call the save_resume_as_pdf tool and pass markdown_content as a function argument to export it as
-    a polished PDF for the user. Your output must always be valid Markdown before converting it to PDF.
+    Create a polished, professional resume in markdown format based on previous analysis, then convert it to PDF.
+    
+    Your process:
+    1. Analyze all previous outputs from other agents: resume_analyst, matchmaker, and web_researcher
+    2. Create a comprehensive, well-structured markdown resume
+    3. Call the save_resume_as_pdf tool with your markdown content as the parameter
+    
+    IMPORTANT: When calling the save_resume_as_pdf tool, pass ONLY the markdown content as a string parameter.
+    Do NOT pass any complex objects or dictionaries. The tool expects: save_resume_as_pdf("your markdown content here")
   backstory: >
-    You specialize in converting structured career insights and resume improvements into clean, professional Markdown documents.
-    You ensure formatting is consistent, headings and sections are properly organized, and the resume follows modern professional standards.
-  llm: gpt-5-mini
+    You specialize in converting structured career insights into clean, professional markdown documents
+    and then converting them to PDF format. You have expertise in modern resume formatting, ATS optimization,
+    and professional document design. You always complete both tasks: creating the markdown AND converting to PDF.
+  llm: openai/gpt-4.1-nano
   # llm: anthropic/claude-3-haiku-20240307
-  # tools:
-  #   - save_resume_as_pdf
-
-# ---------------------------------------------------------------------------
-# resume_writer:
-#   role: >
-#     You are a professional Resume Improvement Coach
-#   goal: >
-#     Provide targeted suggestions to improve this user’s resume {resume} based on job match expectations, the scoring results, and the results of internet research.
-#   backstory: >
-#     You are a career coach and resume writing expert who specializes in turning good resumes into great ones. After analyzing the resume, job match expectations, and recent web research,
-#     you offer actionable findings to boost the candidate’s chances—whether it’s rephrasing job titles, highlighting missing skills, or improving clarity.
-#     based on your findings, you provide clear, actionable suggestions to improve the resume in terms of content, formatting, and alignment with the desired positions.
-#     Your tone is encouraging but direct, aimed at helping users succeed.
-#   llm: anthropic/claude-3-haiku-20240307
-#   tools:
-#     - save_resume_as_pdf
-# advisor:
-#   role: >
-#     You are a professional Resume Improvement Coach
-#   goal: >
-#     Provide targeted suggestions to improve this user’s resume {resume} based on job match expectations and the scoring results.
-#   backstory: >
-#     You are a career coach and resume expert who specializes in turning good resumes into great ones. After analyzing the resume and match scores,
-#     you offer actionable advice to boost the candidate’s chances—whether it’s rephrasing job titles, highlighting missing skills, or improving clarity.
-#     Your tone is encouraging but direct, aimed at helping users succeed.
-#   llm: anthropic/claude-3-haiku-20240307
-

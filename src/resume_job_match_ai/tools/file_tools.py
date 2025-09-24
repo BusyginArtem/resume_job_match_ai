@@ -2,11 +2,11 @@ from crewai.tools import tool
 
 
 @tool("JD Extractor")
-def extract_job_description() -> str:
+def extract_job_description(jd_path: str) -> str:
     """Always use this tool to extract uploaded job description and return string"""
 
     try:
-        with open("input/jd.txt", encoding="utf-8") as file:
+        with open(jd_path, encoding="utf-8") as file:
             jd = file.read()
         return jd
 
