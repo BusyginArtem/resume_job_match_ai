@@ -97,7 +97,7 @@ class ResumeJobMatchAi:
             config=self.agents_config["web_researcher"],  # type: ignore[index]
             verbose=True,
             tools=[self.serper_tool],
-            max_rpm=1,
+            # max_rpm=1,
             max_execution_time=600,
             allow_delegation=False,
             step_callback=self._log_agent_step,
