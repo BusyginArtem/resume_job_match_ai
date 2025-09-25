@@ -66,6 +66,7 @@ web_research_task:
   agent: web_researcher
   output_file: output/web_research_summary.md
   markdown: true
+  async_execution: true
 
 resume_writer_task:
   description: >
