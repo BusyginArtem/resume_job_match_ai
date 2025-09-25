@@ -70,51 +70,95 @@ web_research_task:
 
 resume_writer_task:
   description: >
-    CRITICAL: This task has TWO MANDATORY steps that you MUST complete:
+    YOU MUST COMPLETE BOTH STEPS BELOW. THE TASK IS NOT COMPLETE UNTIL BOTH ARE DONE:
     
-    STEP 1: Create an improved markdown resume
-    STEP 2: Convert it to PDF using the save_resume_as_pdf tool
+    STEP 1: Create improved markdown resume from analysis
+    STEP 2: MANDATORY - Call save_resume_as_pdf tool with the markdown content
     
-    IMPORTANT: You MUST use the save_resume_as_pdf tool to complete this task. 
-    Do NOT provide a final answer without calling this tool.
+    CRITICAL INSTRUCTIONS:
+    - You CANNOT complete this task without calling the save_resume_as_pdf tool
+    - Do NOT write "I will call the tool" or "Tool has been called" - ACTUALLY CALL IT
+    - The tool expects a single string parameter containing the complete markdown content
+    - Do NOT provide a final response until you receive a success confirmation from the tool
     
-    Detailed steps:
-    1. Review outputs from resume_analysis_task, job_matching_task, and web_research_task
-    2. Create a comprehensive markdown-formatted resume that incorporates:
-       - All candidate information from the resume analysis
-       - Improvements suggested by the job matching analysis  
-       - Modern trends and keywords from web research
-    3. Format the resume with proper markdown syntax (# for main heading, ## for sections, etc.)
-    4. MANDATORY: Use the save_resume_as_pdf tool with your complete markdown content
-    5. Call: save_resume_as_pdf("your_complete_markdown_content_here")
-    
-    CRITICAL NOTES:
-    - The save_resume_as_pdf tool expects a STRING parameter containing the full markdown content
-    - Do NOT pass objects, dictionaries, or complex data structures
-    - The tool will convert your markdown to a styled PDF automatically
-    - You must wait for the tool's success confirmation before completing the task
-    
-    EXAMPLE of correct tool usage:
-    save_resume_as_pdf("# John Doe\n## Software Engineer\n\n### Experience\n- Led development team...")
-  expected_output: >
-    1. A complete professional resume in markdown format that includes:
-       - Header with name and contact information
-       - Professional summary section
+    Process:
+    1. Review all previous analysis outputs
+    2. Create comprehensive markdown resume with:
+       - Professional header (name, contact info)
+       - Summary/objective section
        - Work experience with quantified achievements
-       - Education section
-       - Skills section organized by category
-       - Any additional relevant sections (certifications, projects, etc.)
-       - Modern formatting that is ATS-friendly
+       - Education details
+       - Skills organized by category
+       - Additional relevant sections
+    3. IMMEDIATELY call: save_resume_as_pdf("your_complete_markdown_content_here")
+    4. Wait for tool confirmation before completing
     
-    2. MANDATORY: Successful execution of the save_resume_as_pdf tool
-    3. Confirmation message from the tool that the PDF was created successfully
-    4. File path and size information of the created PDF
+    TOOL USAGE EXAMPLE:
+    save_resume_as_pdf("# John Smith\nSoftware Engineer\n\n## Contact\nEmail: john@email.com\n\n## Experience\n### Senior Developer\n...")
     
-    FAILURE CONDITIONS:
-    - If you do not use the save_resume_as_pdf tool, the task is INCOMPLETE
-    - If the tool returns an error, you must troubleshoot or report the specific error
-    - The task is only complete when you receive a success message from the PDF tool
+    FAILURE CONDITIONS - Task is INCOMPLETE if:
+    - You don't call save_resume_as_pdf tool
+    - You simulate calling the tool instead of actually calling it
+    - You don't receive a success confirmation from the tool
+  expected_output: >
+    1. Complete professional markdown resume content
+    2. MANDATORY: Successful execution of save_resume_as_pdf tool with confirmation message
+    3. File path and size confirmation of created PDF
+    4. Success message: "🎉 SUCCESS: PDF resume created successfully!"
+    
+    The task is ONLY complete when you receive the tool's success confirmation.
   agent: resume_writer
   markdown: true
   output_file: output/resume_advising_report.md
   context: [job_matching_task, web_research_task, resume_analysis_task]
+
+# resume_writer_task:
+#   description: >
+#     CRITICAL: This task has TWO MANDATORY steps that you MUST complete:
+    
+#     STEP 1: Create an improved markdown resume
+#     STEP 2: Convert it to PDF using the save_resume_as_pdf tool
+    
+#     IMPORTANT: You MUST use the save_resume_as_pdf tool to complete this task. 
+#     Do NOT provide a final answer without calling this tool.
+    
+#     Detailed steps:
+#     1. Review outputs from resume_analysis_task, job_matching_task, and web_research_task
+#     2. Create a comprehensive markdown-formatted resume that incorporates:
+#        - All candidate information from the resume analysis
+#        - Improvements suggested by the job matching analysis  
+#        - Modern trends and keywords from web research
+#     3. Format the resume with proper markdown syntax (# for main heading, ## for sections, etc.)
+#     4. MANDATORY: Use the save_resume_as_pdf tool with your complete markdown content
+#     5. Call: save_resume_as_pdf("your_complete_markdown_content_here")
+    
+#     CRITICAL NOTES:
+#     - The save_resume_as_pdf tool expects a STRING parameter containing the full markdown content
+#     - Do NOT pass objects, dictionaries, or complex data structures
+#     - The tool will convert your markdown to a styled PDF automatically
+#     - You must wait for the tool's success confirmation before completing the task
+    
+#     EXAMPLE of correct tool usage:
+#     save_resume_as_pdf("# John Doe\n## Software Engineer\n\n### Experience\n- Led development team...")
+#   expected_output: >
+#     1. A complete professional resume in markdown format that includes:
+#        - Header with name and contact information
+#        - Professional summary section
+#        - Work experience with quantified achievements
+#        - Education section
+#        - Skills section organized by category
+#        - Any additional relevant sections (certifications, projects, etc.)
+#        - Modern formatting that is ATS-friendly
+    
+#     2. MANDATORY: Successful execution of the save_resume_as_pdf tool
+#     3. Confirmation message from the tool that the PDF was created successfully
+#     4. File path and size information of the created PDF
+    
+#     FAILURE CONDITIONS:
+#     - If you do not use the save_resume_as_pdf tool, the task is INCOMPLETE
+#     - If the tool returns an error, you must troubleshoot or report the specific error
+#     - The task is only complete when you receive a success message from the PDF tool
+#   agent: resume_writer
+#   markdown: true
+#   output_file: output/resume_advising_report.md
+#   context: [job_matching_task, web_research_task, resume_analysis_task]
