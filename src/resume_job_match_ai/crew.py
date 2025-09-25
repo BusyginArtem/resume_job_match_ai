@@ -210,7 +210,7 @@ class ResumeJobMatchAi:
         print(f"🚀 CREW STEP: {step[:200]}")
 
     def confirm_resume_writer_completed(self, output: TaskOutput):
-        """Callback function to be executed after the resume_writer_task is completed."""
+        """Enhanced callback to verify tool usage and PDF creation."""
         print(f"""
             Task completed!
             Task: {output.description}
@@ -218,18 +218,72 @@ class ResumeJobMatchAi:
         """)
 
         pdf_path = "./output/enhanced_resume.pdf"
+
+        # Check if PDF was actually created
         if os.path.exists(pdf_path):
             file_size = os.path.getsize(pdf_path)
             print(f"✅ PDF file confirmed: {pdf_path} ({file_size} bytes)")
+            print("🎉 RESUME WRITER TASK: SUCCESS - PDF created!")
+            return True
         else:
-            print(f"⚠️ PDF file not found at: {pdf_path}")
+            print(f"❌ PDF file not found at: {pdf_path}")
+            print("🚨 RESUME WRITER TASK: FAILED - Tool was not called!")
+
+            # Check if output mentions tool usage but file wasn't created
+            output_str = str(output.raw)
+            if "save_resume_as_pdf" in output_str.lower():
+                print("⚠️  Agent mentioned the tool but didn't actually call it")
+                print(
+                    "💡 This indicates the agent simulated tool usage instead of calling it"
+                )
+
+            # Force a re-run or provide guidance
+            print("\n🔧 TROUBLESHOOTING:")
+            print(
+                "1. The resume_writer agent must ACTUALLY call save_resume_as_pdf tool"
+            )
+            print("2. Check that wkhtmltopdf is properly installed")
+            print("3. Verify tool permissions and output directory access")
+
+            return False
 
     def _log_agent_step(self, step):
-        """Debug callback to log agent steps"""
-        name = type(step).__name__
-        print(f"🔍 DEBUG - Step name: {name}")
+        """Enhanced debug callback to monitor actual tool usage"""
+        step_name = type(step).__name__
+        print(f"🔍 DEBUG - Step: {step_name}")
 
+        # Monitor for actual tool executions
         if hasattr(step, "tool_name"):
-            print(f"Tool called: {step.tool_name}")
-        if hasattr(step, "output"):
-            print("Output:", step.output)
+            tool_name = step.tool_name
+            print(f"🛠️  TOOL EXECUTED: {tool_name}")
+
+            if tool_name == "save_resume_as_pdf" or "save_resume_as_pdf" in str(
+                tool_name
+            ):
+                print("🎯 PDF TOOL DETECTED - This is the critical tool call!")
+
+                if hasattr(step, "output"):
+                    print(f"📤 Tool output: {step.output}")
+
+                    # Check if PDF was actually created
+                    pdf_path = "./output/enhanced_resume.pdf"
+                    if os.path.exists(pdf_path):
+                        print("✅ PDF VERIFIED - File exists after tool call")
+                    else:
+                        print("❌ PDF MISSING - Tool called but no file created")
+
+        # Log any other relevant step information
+        if hasattr(step, "output") and step.output:
+            output_preview = str(step.output)[:200]
+            print(f"📋 Output preview: {output_preview}...")
+
+        # Check for tool simulation (red flag)
+        if hasattr(step, "output") and step.output:
+            output_text = str(step.output).lower()
+            if (
+                "calling save_resume_as_pdf" in output_text
+                or "will call save_resume_as_pdf" in output_text
+            ) and not hasattr(step, "tool_name"):
+                print(
+                    "🚨 WARNING: Agent appears to be simulating tool usage instead of calling it!"
+                )
